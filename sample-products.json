@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Pink Rose Bouquet",
+    "price": 24.99,
+    "description": "Beautiful handmade pink rose bouquet made from pipe cleaners. Perfect for gifts or home decoration.",
+    "imageUrl": "/placeholder.svg",
+    "stock": 15,
+    "createdAt": "2023-10-01T10:00:00Z"
+  },
+  {
+    "name": "Colorful Flower Arrangement",
+    "price": 19.99,
+    "description": "Vibrant mixed flower arrangement with various colors. Each flower is carefully crafted by hand.",
+    "imageUrl": "/placeholder.svg",
+    "stock": 20,
+    "createdAt": "2023-10-01T10:05:00Z"
+  },
+  {
+    "name": "Mini Succulent Set",
+    "price": 14.99,
+    "description": "Adorable set of 3 mini succulents. Great for desk decoration or small gifts.",
+    "imageUrl": "/placeholder.svg",
+    "stock": 12,
+    "createdAt": "2023-10-01T10:10:00Z"
+  },
+  {
+    "name": "Wedding Bouquet",
+    "price": 39.99,
+    "description": "Elegant white and pink wedding bouquet. Perfect for brides or special occasions.",
+    "imageUrl": "/placeholder.svg",
+    "stock": 8,
+    "createdAt": "2023-10-01T10:15:00Z"
+  },
+  {
+    "name": "Heart-Shaped Flower",
+    "price": 9.99,
+    "description": "Romantic heart-shaped flower made from red pipe cleaners. Ideal for Valentine's Day.",
+    "imageUrl": "/placeholder.svg",
+    "stock": 25,
+    "createdAt": "2023-10-01T10:20:00Z"
+  },
+  {
+    "name": "Sunflower Bouquet",
+    "price": 27.99,
+    "description": "Bright and cheerful sunflower bouquet that will never wilt. Handcrafted with love.",
+    "imageUrl": "/placeholder.svg",
+    "stock": 10,
+    "createdAt": "2023-10-01T10:25:00Z"
+  }
+]
