@@ -182,7 +182,7 @@ const Index = () => {
         <div className="container mx-auto text-center">
           <p className="mb-2">© {new Date().getFullYear()} Phoolishh Loveee. All rights reserved.</p>
           <p className="text-sm">Handmade with love and pipe cleaners</p>
-          < />
+          <MadeWithDyad />
         </div>
       </footer>
     </div>

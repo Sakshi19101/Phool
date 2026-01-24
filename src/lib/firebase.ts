@@ -5,12 +5,13 @@ import { getStorage } from "firebase/storage";
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDphoolishloveAPIKey123",
+  apiKey: "AIzaSyCO0az6MLVxaYZss-6PuugObNmmf2WdJfw",
   authDomain: "phoolishlove-ecommerce.firebaseapp.com",
   projectId: "phoolishlove-ecommerce",
-  storageBucket: "phoolishlove-ecommerce.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef123456"
+  storageBucket: "phoolishlove-ecommerce.firebasestorage.app",
+  messagingSenderId: "654565703771",
+  appId: "1:654565703771:web:30579f55a35bcae0cabf7e",
+  measurementId: "G-7ZNES2LCYS"
 };
 
 // Initialize Firebase
