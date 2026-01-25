@@ -2,7 +2,8 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth } from '@/lib/firebase';
 
-interface CartItem {
+export interface CartItem {
+  id: string;
   productId: string;
   quantity: number;
   addedAt: Date;
@@ -21,7 +22,7 @@ export const addToCart = async (productId: string, quantity: number = 1) => {
     if (!querySnapshot.empty) {
       // Update existing item
       const docRef = querySnapshot.docs[0].ref;
-      const existingItem = querySnapshot.docs[0].data() as CartItem;
+      const existingItem = querySnapshot.docs[0].data() as Omit<CartItem, 'id'>;
       await updateDoc(docRef, {
         quantity: existingItem.quantity + quantity,
         addedAt: new Date()
@@ -46,7 +47,7 @@ export const addToCart = async (productId: string, quantity: number = 1) => {
   }
 };
 
-export const getCartItems = async () => {
+export const getCartItems = async (): Promise<CartItem[]> => {
   const user = auth.currentUser;
   if (!user) return [];
 
@@ -62,11 +63,11 @@ export const getCartItems = async () => {
     const querySnapshot = await getDocs(cartRef);
 
     const cartItems = querySnapshot.docs.map(doc => {
-      const data = doc.data() as CartItem;
+      const data = doc.data() as Omit<CartItem, 'id'>;
       return {
         id: doc.id,
         ...data
-      };
+      } as CartItem;
     });
 
     // Cache in localStorage

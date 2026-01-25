@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, PlusCircle, Edit, Trash2, Upload } from 'lucide-react';
 import { MadeWithDyad } from '@/components/made-with-dyad';
-import { getAllProducts, addProduct, updateProduct, deleteProduct, Product } from '@/services/productService';
+import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/services/productService';
+import { Product } from '@/services/productService';
 import { showSuccess, showError } from '@/utils/toast';
 
 const Admin = () => {
