@@ -1,9 +1,7 @@
 import { loadRazorpayScript as loadScript } from '@/utils/razorpayLoader';
 
-// Razorpay configuration
-const RAZORPAY_KEY_ID = 'rzp_test_S81qGkN4miqepM';
-
 export interface PaymentOptions {
+  key: string;
   amount: number;
   currency?: string;
   name: string;
@@ -56,12 +54,7 @@ export const initializeRazorpay = (options: PaymentOptions) => {
     throw new Error('Razorpay SDK not loaded');
   }
 
-  const rzp = new (window as any).Razorpay({
-    key: RAZORPAY_KEY_ID,
-    ...options,
-    currency: options.currency || 'INR',
-  });
-
+  const rzp = new (window as any).Razorpay(options);
   return rzp;
 };
 
