@@ -10,7 +10,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import { CustomerDetailsForm } from '@/components/CustomerDetailsForm';
-import { getCartItems, updateCartItemQuantity, removeFromCart, clearCart } from '@/services/cartService';
+import { getCartItems, updateCartItemQuantity, removeFromCart } from '@/services/cartService';
 import { getProductById } from '@/services/productService';
 import { createOrder } from '@/services/orderService';
 import { loadRazorpayScript, initializeRazorpay, createRazorpayOrder } from '@/services/razorpayService';
@@ -183,12 +183,13 @@ const Cart = () => {
 
       // Initialize Razorpay payment
       console.log('Initializing Razorpay payment...');
-      const razorpay = initializeRazorpay({
-        amount: total,
+      const rzp = initializeRazorpay({
+        key: 'rzp_test_S81qGkN4miqepM',
+        amount: total * 100, // Razorpay expects amount in paise
+        currency: 'INR',
         name: 'Phoolishh Loveee',
         description: 'Payment for order items',
-        // Skip order_id for test mode to avoid API errors
-        // order_id: razorpayOrder.id,
+        order_id: razorpayOrder.id,
         prefill: {
           name: customerDetails.name,
           email: customerDetails.email,
@@ -202,7 +203,7 @@ const Cart = () => {
               method: 'razorpay' as const,
               status: 'paid' as const,
               transactionId: response.razorpay_payment_id,
-              orderId: response.razorpay_order_id || razorpayOrder.id
+              orderId: response.razorpay_order_id
             };
 
             const orderId = await createOrder(orderItems, customerDetails, paymentDetails);
@@ -230,14 +231,17 @@ const Cart = () => {
             setPaymentLoading(false);
             showError('Payment cancelled');
           }
+        },
+        theme: {
+          color: '#ec4899'
         }
       });
 
       console.log('Opening Razorpay modal...');
-      razorpay.open();
-    } catch (error) {
+      rzp.open();
+    } catch (error: any) {
       console.error('Payment error:', error);
-      setError('Payment failed. Please try again.');
+      setError(error.message || 'Payment failed. Please try again.');
       showError('Payment failed');
       setPaymentLoading(false);
     }
