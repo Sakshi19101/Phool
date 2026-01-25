@@ -11,17 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, PlusCircle, Edit, Trash2, Upload } from 'lucide-react';
 import { MadeWithDyad } from '@/components/made-with-dyad';
-import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/services/productService';
+import { getAllProducts, addProduct, updateProduct, deleteProduct, Product } from '@/services/productService';
 import { showSuccess, showError } from '@/utils/toast';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  imageUrl: string;
-  stock: number;
-}
 
 const Admin = () => {
   const [user] = useAuthState(auth);
@@ -127,7 +118,7 @@ const Admin = () => {
     setPrice(product.price.toString());
     setDescription(product.description);
     setStock(product.stock.toString());
-    setImagePreview(product.imageUrl);
+    setImagePreview(product.imageUrl || '');
   };
 
   const handleDelete = async (productId: string) => {
@@ -214,7 +205,7 @@ const Admin = () => {
         )}
 
         {success && (
-          <Alert variant="success" className="mb-6 alert-custom">
+          <Alert className="mb-6 alert-custom">
             <CheckCircle2 className="h-4 w-4" />
             <AlertTitle>Success</AlertTitle>
             <AlertDescription>{success}</AlertDescription>

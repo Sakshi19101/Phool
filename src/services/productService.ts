@@ -2,8 +2,8 @@ import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
-interface Product {
-  id?: string;
+export interface Product {
+  id: string;
   name: string;
   price: number;
   description: string;
@@ -17,8 +17,8 @@ export const getAllProducts = async (): Promise<Product[]> => {
     const querySnapshot = await getDocs(collection(db, "products"));
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
-    })) as Product[];
+      ...(doc.data() as Omit<Product, 'id'>)
+    }));
   } catch (error) {
     console.error('Error getting products:', error);
     throw error;
@@ -33,8 +33,8 @@ export const getProductById = async (productId: string): Promise<Product | null>
     if (docSnap.exists()) {
       return {
         id: docSnap.id,
-        ...docSnap.data()
-      } as Product;
+        ...(docSnap.data() as Omit<Product, 'id'>)
+      };
     }
 
     return null;
@@ -66,7 +66,7 @@ export const addProduct = async (product: Omit<Product, 'id'>, imageFile?: File)
   }
 };
 
-export const updateProduct = async (productId: string, product: Partial<Product>, imageFile?: File): Promise<void> => {
+export const updateProduct = async (productId: string, product: Partial<Omit<Product, 'id'>>, imageFile?: File): Promise<void> => {
   try {
     let imageUrl = product.imageUrl;
 

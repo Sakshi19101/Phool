@@ -6,18 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MadeWithDyad } from '@/components/made-with-dyad';
-import { getAllProducts } from '@/services/productService';
+import { getAllProducts, Product } from '@/services/productService';
 import { addToCart } from '@/services/cartService';
 import { showSuccess, showError } from '@/utils/toast';
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  imageUrl: string;
-  stock: number;
-}
 
 const Index = () => {
   const [products, setProducts] = useState<Product[]>([]);

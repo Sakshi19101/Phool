@@ -9,9 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { MadeWithDyad } from '@/components/made-with-dyad';
+import { CustomerDetailsForm } from '@/components/CustomerDetailsForm';
 import { getCartItems, updateCartItemQuantity, removeFromCart, clearCart } from '@/services/cartService';
 import { getProductById } from '@/services/productService';
 import { createOrder } from '@/services/orderService';
+import { loadRazorpayScript, initializeRazorpay, createRazorpayOrder } from '@/services/razorpayService';
 import { showSuccess, showError } from '@/utils/toast';
 
 interface CartItem {
@@ -39,6 +41,8 @@ const Cart = () => {
   const [error, setError] = useState('');
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -131,9 +135,13 @@ const Cart = () => {
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
+    setShowCustomerForm(true);
+  };
 
+  const handleCustomerDetailsSubmit = async (customerDetails: any) => {
     try {
-      setCheckoutLoading(true);
+      console.log('Starting payment process with customer details:', customerDetails);
+      setPaymentLoading(true);
       setError('');
 
       // Prepare order items
@@ -145,24 +153,89 @@ const Cart = () => {
         imageUrl: item.product.imageUrl
       }));
 
-      // Create order (in a real app, you'd collect shipping/payment info)
-      const orderId = await createOrder(orderItems);
+      const total = calculateTotal();
+      console.log('Order total:', total);
 
-      setCheckoutSuccess(true);
-      showSuccess('Order placed successfully!');
+      // Load Razorpay script
+      console.log('Loading Razorpay script...');
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error('Failed to load payment gateway');
+      }
+      console.log('Razorpay script loaded successfully');
 
-      // Redirect to home after a delay
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
+      // Create Razorpay order
+      console.log('Creating Razorpay order...');
+      const razorpayOrder = await createRazorpayOrder(total, `order_${Date.now()}`);
+      console.log('Razorpay order created:', razorpayOrder);
+
+      // Initialize Razorpay payment
+      console.log('Initializing Razorpay payment...');
+      const razorpay = initializeRazorpay({
+        amount: total,
+        name: 'Phoolishh Loveee',
+        description: 'Payment for order items',
+        // Skip order_id for test mode to avoid API errors
+        // order_id: razorpayOrder.id,
+        prefill: {
+          name: customerDetails.name,
+          email: customerDetails.email,
+          contact: customerDetails.phone
+        },
+        handler: async (response: any) => {
+          console.log('Payment successful:', response);
+          try {
+            // Payment successful - create order with payment details
+            const paymentDetails = {
+              method: 'razorpay' as const,
+              status: 'paid' as const,
+              transactionId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id || razorpayOrder.id
+            };
+
+            const orderId = await createOrder(orderItems, customerDetails, paymentDetails);
+            console.log('Order created successfully:', orderId);
+            
+            setCheckoutSuccess(true);
+            setShowCustomerForm(false);
+            showSuccess('Payment successful! Order placed successfully!');
+
+            // Redirect to home after a delay
+            setTimeout(() => {
+              navigate('/');
+            }, 3000);
+          } catch (error) {
+            console.error('Order creation error:', error);
+            setError('Payment successful but order creation failed. Please contact support.');
+            showError('Order creation failed');
+          } finally {
+            setPaymentLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            console.log('Payment modal dismissed');
+            setPaymentLoading(false);
+            showError('Payment cancelled');
+          }
+        }
+      });
+
+      console.log('Opening Razorpay modal...');
+      razorpay.open();
 
     } catch (error) {
-      console.error('Checkout error:', error);
-      setError('Checkout failed. Please try again.');
-      showError('Checkout failed');
-    } finally {
-      setCheckoutLoading(false);
+      console.error('Payment error:', error);
+      setError('Payment failed. Please try again.');
+      showError('Payment failed');
+      setPaymentLoading(false);
     }
+  };
+
+  const handleCancelPayment = () => {
+    setPaymentLoading(false);
+    setShowCustomerForm(false);
+    showError('Payment cancelled');
   };
 
   if (loading && !cartItems.length) {
@@ -243,7 +316,7 @@ const Cart = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-pink-600">{item.product.name}</h3>
-                        <p className="text-pink-500">${item.product.price.toFixed(2)} each</p>
+                        <p className="text-pink-500">₹{item.product.price.toFixed(2)} each</p>
                         <Badge className="mt-2" variant={item.product.stock > 0 ? "default" : "destructive"}>
                           {item.product.stock > 0 ? 'In Stock' : 'Low Stock'}
                         </Badge>
@@ -298,7 +371,7 @@ const Cart = () => {
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
                     <span className="text-pink-500">Subtotal</span>
-                    <span className="font-semibold text-pink-600">${calculateTotal().toFixed(2)}</span>
+                    <span className="font-semibold text-pink-600">₹{calculateTotal().toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-pink-500">Shipping</span>
@@ -306,7 +379,7 @@ const Cart = () => {
                   </div>
                   <div className="flex justify-between border-t border-pink-200 pt-4">
                     <span className="font-semibold text-pink-600">Total</span>
-                    <span className="font-bold text-pink-600">${calculateTotal().toFixed(2)}</span>
+                    <span className="font-bold text-pink-600">₹{calculateTotal().toFixed(2)}</span>
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -330,6 +403,20 @@ const Cart = () => {
           </div>
         )}
       </main>
+
+      {/* Customer Details Modal */}
+      {showCustomerForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <CustomerDetailsForm
+              onSubmit={handleCustomerDetailsSubmit}
+              onCancel={() => setShowCustomerForm(false)}
+              loading={paymentLoading}
+              error={error}
+            />
+          </div>
+        </div>
+      )}
 
       <footer className="bg-pink-500 text-white py-6 mt-12">
         <div className="container mx-auto text-center">

@@ -61,10 +61,13 @@ export const getCartItems = async () => {
     const cartRef = collection(db, `users/${user.uid}/cart`);
     const querySnapshot = await getDocs(cartRef);
 
-    const cartItems = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as CartItem[];
+    const cartItems = querySnapshot.docs.map(doc => {
+      const data = doc.data() as CartItem;
+      return {
+        id: doc.id,
+        ...data
+      };
+    });
 
     // Cache in localStorage
     localStorage.setItem(`cart_${user.uid}`, JSON.stringify(cartItems));

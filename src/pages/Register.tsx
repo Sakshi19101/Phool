@@ -92,7 +92,7 @@ const Register = () => {
             )}
 
             {success && (
-              <Alert variant="success">
+              <Alert>
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertTitle>Success</AlertTitle>
                 <AlertDescription>{success}</AlertDescription>

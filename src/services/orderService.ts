@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase';
-import { collection, addDoc, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth } from '@/lib/firebase';
 import { clearCart } from './cartService';
 
@@ -11,25 +11,40 @@ interface OrderItem {
   imageUrl?: string;
 }
 
-interface Order {
+interface CustomerDetails {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+}
+
+interface PaymentDetails {
+  method: 'razorpay' | 'cod';
+  status: 'pending' | 'paid' | 'failed';
+  transactionId?: string;
+  orderId?: string;
+}
+
+export interface Order {
   id?: string;
   userId: string;
   items: OrderItem[];
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: Date;
-  shippingAddress?: {
-    name: string;
-    address: string;
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
-  };
-  paymentMethod?: string;
+  customerDetails: CustomerDetails;
+  paymentDetails: PaymentDetails;
 }
 
-export const createOrder = async (items: OrderItem[], shippingAddress?: any, paymentMethod?: string): Promise<string> => {
+export const createOrder = async (
+  items: OrderItem[], 
+  customerDetails: CustomerDetails, 
+  paymentDetails: PaymentDetails
+): Promise<string> => {
   const user = auth.currentUser;
   if (!user) throw new Error('User not authenticated');
 
@@ -40,10 +55,10 @@ export const createOrder = async (items: OrderItem[], shippingAddress?: any, pay
       userId: user.uid,
       items,
       total,
-      status: 'pending',
+      status: paymentDetails.status === 'paid' ? 'processing' : 'pending',
       createdAt: new Date(),
-      shippingAddress,
-      paymentMethod
+      customerDetails,
+      paymentDetails
     };
 
     const docRef = await addDoc(collection(db, "orders"), orderData);
