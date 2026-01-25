@@ -20,6 +20,7 @@ interface CartItem {
   id: string;
   productId: string;
   quantity: number;
+  addedAt: Date;
 }
 
 interface Product {
@@ -55,7 +56,7 @@ const Cart = () => {
       try {
         setLoading(true);
         const cartItems = await getCartItems();
-
+        
         // Fetch product details for each cart item
         const itemsWithProducts = await Promise.all(
           cartItems.map(async (cartItem) => {
@@ -73,7 +74,12 @@ const Cart = () => {
           })
         );
 
-        setCartItems(itemsWithProducts.filter(item => item.product !== null));
+        // Filter out items with null products and cast to correct type
+        const validItems = itemsWithProducts.filter(
+          item => item.product !== null
+        ) as CartItemWithProduct[];
+
+        setCartItems(validItems);
       } catch (error) {
         console.error('Error fetching cart with products:', error);
         setError('Failed to load cart items');
@@ -92,7 +98,7 @@ const Cart = () => {
     try {
       await updateCartItemQuantity(itemId, newQuantity);
       const updatedItems = await getCartItems();
-
+      
       // Update with product details
       const itemsWithProducts = await Promise.all(
         updatedItems.map(async (cartItem) => {
@@ -110,7 +116,12 @@ const Cart = () => {
         })
       );
 
-      setCartItems(itemsWithProducts);
+      // Filter out items with null products and cast to correct type
+      const validItems = itemsWithProducts.filter(
+        item => item.product !== null
+      ) as CartItemWithProduct[];
+
+      setCartItems(validItems);
       showSuccess('Cart updated');
     } catch (error) {
       console.error('Error updating quantity:', error);
@@ -162,6 +173,7 @@ const Cart = () => {
       if (!scriptLoaded) {
         throw new Error('Failed to load payment gateway');
       }
+
       console.log('Razorpay script loaded successfully');
 
       // Create Razorpay order
@@ -195,7 +207,7 @@ const Cart = () => {
 
             const orderId = await createOrder(orderItems, customerDetails, paymentDetails);
             console.log('Order created successfully:', orderId);
-            
+
             setCheckoutSuccess(true);
             setShowCustomerForm(false);
             showSuccess('Payment successful! Order placed successfully!');
@@ -223,7 +235,6 @@ const Cart = () => {
 
       console.log('Opening Razorpay modal...');
       razorpay.open();
-
     } catch (error) {
       console.error('Payment error:', error);
       setError('Payment failed. Please try again.');
@@ -259,11 +270,7 @@ const Cart = () => {
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold italic">Phoolishh Loveee</h1>
           <nav className="flex space-x-4">
-            <Button
-              variant="ghost"
-              className="text-white hover:bg-pink-400"
-              onClick={() => navigate('/')}
-            >
+            <Button variant="ghost" className="text-white hover:bg-pink-400" onClick={() => navigate('/')}>
               Continue Shopping
             </Button>
           </nav>
@@ -293,10 +300,7 @@ const Cart = () => {
           <div className="text-center py-12 fade-in">
             <h3 className="text-xl font-semibold text-pink-500 mb-4">Your cart is empty</h3>
             <p className="text-pink-400 mb-6">Looks like you haven't added anything to your cart yet</p>
-            <Button
-              className="bg-pink-500 hover:bg-pink-600 button-hover"
-              onClick={() => navigate('/')}
-            >
+            <Button className="bg-pink-500 hover:bg-pink-600 button-hover" onClick={() => navigate('/')}>
               Continue Shopping
             </Button>
           </div>
@@ -308,10 +312,10 @@ const Cart = () => {
                   <CardContent className="p-4">
                     <div className="flex flex-col md:flex-row items-center gap-4">
                       <div className="w-24 h-24 bg-pink-100 rounded-lg overflow-hidden flex-shrink-0">
-                        <img
-                          src={item.product.imageUrl || '/placeholder.svg'}
-                          alt={item.product.name}
-                          className="w-full h-full object-cover"
+                        <img 
+                          src={item.product.imageUrl || '/placeholder.svg'} 
+                          alt={item.product.name} 
+                          className="w-full h-full object-cover" 
                         />
                       </div>
                       <div className="flex-1">
@@ -323,25 +327,25 @@ const Cart = () => {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
                             className="border-pink-200 text-pink-500 hover:bg-pink-50"
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
                           >
                             -
                           </Button>
-                          <Input
-                            type="number"
-                            min="1"
-                            value={item.quantity}
+                          <Input 
+                            type="number" 
+                            min="1" 
+                            value={item.quantity} 
                             onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
                             className="w-16 text-center border-pink-200 input-focus"
                           />
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
                             className="border-pink-200 text-pink-500 hover:bg-pink-50"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             disabled={item.quantity >= (item.product.stock || 10)}
@@ -349,9 +353,9 @@ const Cart = () => {
                             +
                           </Button>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="sm"
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
                           onClick={() => removeItem(item.id)}
                         >
                           Remove
@@ -383,7 +387,7 @@ const Cart = () => {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button
+                  <Button 
                     className="w-full bg-pink-500 hover:bg-pink-600 button-hover"
                     onClick={handleCheckout}
                     disabled={checkoutLoading}
@@ -408,8 +412,8 @@ const Cart = () => {
       {showCustomerForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <CustomerDetailsForm
-              onSubmit={handleCustomerDetailsSubmit}
+            <CustomerDetailsForm 
+              onSubmit={handleCustomerDetailsSubmit} 
               onCancel={() => setShowCustomerForm(false)}
               loading={paymentLoading}
               error={error}
