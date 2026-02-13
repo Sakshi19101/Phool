@@ -90,6 +90,12 @@ coverage/
 **/api-keys.json
 **/secrets.json
 
+# Specific sensitive files with hardcoded keys
+src/lib/firebase.ts
+src/services/razorpayService.ts
+**/firebase-config.ts
+**/razorpay-config.ts
+
 # Backup files
 *.bak
 *.backup
