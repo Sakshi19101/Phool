@@ -184,6 +184,17 @@ const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ onMobileMenuToggle, isM
                 Cart
               </Button>
               
+              {user && (
+                <Button
+                  variant="ghost"
+                  className="text-gray-700 hover:text-purple-500 hover:bg-purple-50 justify-start py-3"
+                  onClick={() => navigate('/orders')}
+                >
+                  <ShoppingBag className="h-4 w-4 mr-3" />
+                  My Orders
+                </Button>
+              )}
+              
               {!user && (
                 <>
                   <Button
