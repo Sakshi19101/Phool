@@ -113,11 +113,21 @@ export const getOrderById = async (orderId: string): Promise<Order | null> => {
 
 export const getAllOrders = async (): Promise<Order[]> => {
   try {
+    console.log('Getting all orders from Firestore...');
     const querySnapshot = await getDocs(collection(db, "orders"));
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Order[];
+    console.log('Firestore query result:', querySnapshot.empty ? 'No orders found' : `${querySnapshot.docs.length} orders found`);
+    
+    const orders = querySnapshot.docs.map(doc => {
+      const orderData = {
+        id: doc.id,
+        ...doc.data()
+      };
+      console.log('Order document:', orderData);
+      return orderData;
+    }) as Order[];
+    
+    console.log('Processed orders:', orders);
+    return orders;
   } catch (error) {
     console.error('Error getting all orders:', error);
     return [];

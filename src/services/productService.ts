@@ -26,17 +26,23 @@ export const getAllProducts = async (): Promise<Product[]> => {
 };
 
 export const getProductById = async (productId: string): Promise<Product | null> => {
+  console.log('Getting product by ID:', productId);
   try {
     const docRef = doc(db, "products", productId);
     const docSnap = await getDoc(docRef);
 
+    console.log('Product document exists:', docSnap.exists());
+    
     if (docSnap.exists()) {
-      return {
+      const product = {
         id: docSnap.id,
         ...(docSnap.data() as Omit<Product, 'id'>)
       };
+      console.log('Product found:', product);
+      return product;
     }
 
+    console.log('Product not found for ID:', productId);
     return null;
   } catch (error) {
     console.error('Error getting product:', error);

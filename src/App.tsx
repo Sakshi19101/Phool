@@ -9,6 +9,9 @@ import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Admin from "./pages/Admin";
 import OrderManagement from "./pages/OrderManagement";
+import CustomerOrders from "./pages/CustomerOrders";
+import AdminReviews from "./pages/AdminReviews";
+import LoveFlowerGame from "./components/LoveFlowerGame";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,8 +27,11 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/game" element={<LoveFlowerGame />} />
+          <Route path="/orders" element={<CustomerOrders />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/orders" element={<OrderManagement />} />
+          <Route path="/admin/reviews" element={<AdminReviews />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

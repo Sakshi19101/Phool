@@ -21,14 +21,37 @@ service cloud.firestore {
     // Orders can be read by the owner or admins, created by owner
     match /orders/{orderId} {
       allow read: if request.auth != null &&
-                  (request.auth.uid == resource.data.userId || isAdmin());
+                  (request.auth.uid == resource.data.userId || 
+                   request.auth.token.email == 'admin@phoolishlove.com' || // Allow specific admin email
+                   isAdmin());
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-      allow update: if isAdmin();
+      allow update: if request.auth != null &&
+                   (request.auth.token.email == 'admin@phoolishlove.com' || // Allow specific admin email
+                    isAdmin());
     }
     
-    // Allow admins to list all orders
+    // Allow admins to list all orders and read any order
     match /orders/{orderId=**} {
-      allow list: if isAdmin();
+      allow list: if request.auth != null &&
+                  (request.auth.token.email == 'admin@phoolishlove.com' || // Allow specific admin email
+                   isAdmin());
+      allow get: if request.auth != null &&
+                 (request.auth.token.email == 'admin@phoolishlove.com' || // Allow specific admin email
+                  isAdmin());
+    }
+
+    // Reviews can be read by anyone, created by authenticated users
+    match /reviews/{reviewId} {
+      allow read: if true; // Anyone can read approved reviews
+      allow create: if request.auth != null; // Authenticated users can create reviews
+      allow update, delete: if request.auth != null && 
+                           (request.auth.token.email == 'admin@phoolishlove.com' || // Admin can manage reviews
+                            isAdmin());
+    }
+
+    // Allow listing reviews for public access
+    match /reviews/{reviewId=**} {
+      allow list: if true; // Anyone can list reviews
     }
   }
 }

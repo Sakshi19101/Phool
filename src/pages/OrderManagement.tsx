@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertCircle, CheckCircle2, Truck, Package, X, ArrowLeft, Eye } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { AlertCircle, CheckCircle2, Truck, Package, X, ArrowLeft, Eye, Search } from 'lucide-react';
 import { getAllOrders, updateOrderStatus } from '@/services/orderService';
 import { Order } from '@/services/orderService';
 import { showSuccess, showError } from '@/utils/toast';
@@ -15,9 +17,12 @@ import { showSuccess, showError } from '@/utils/toast';
 const OrderManagement = () => {
   const [user] = useAuthState(auth);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,18 +31,44 @@ const OrderManagement = () => {
       return;
     }
 
-    fetchOrders();
+    // Check if user is admin
+    const checkAdminStatus = async () => {
+      try {
+        // For now, check if email matches admin email
+        // In production, you should check the isAdmin field in the user document
+        const adminEmails = ['admin@phoolishlove.com']; // Add your admin email here
+        
+        if (!adminEmails.includes(user?.email || '')) {
+          console.log('User is not admin, redirecting...', user?.email);
+          navigate('/');
+          return;
+        }
+        
+        console.log('User is admin, fetching orders...');
+        fetchOrders();
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        navigate('/');
+      }
+    };
+
+    checkAdminStatus();
   }, [user, navigate]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
+      console.log('Fetching all orders...');
       const ordersData = await getAllOrders();
+      console.log('Orders fetched:', ordersData);
+      
       // Sort orders by date (newest first)
       const sortedOrders = ordersData.sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
+      console.log('Sorted orders:', sortedOrders);
       setOrders(sortedOrders);
+      setFilteredOrders(sortedOrders); // Initialize filtered orders
     } catch (error) {
       console.error('Error fetching orders:', error);
       setError('Failed to load orders');
@@ -47,11 +78,36 @@ const OrderManagement = () => {
     }
   };
 
+  // Filter orders based on search term and status
+  useEffect(() => {
+    let filtered = orders;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(order => 
+        order.customerDetails.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customerDetails.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.id?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(order => order.status === statusFilter);
+    }
+
+    setFilteredOrders(filtered);
+  }, [orders, searchTerm, statusFilter]);
+
   const handleStatusUpdate = async (orderId: string, newStatus: Order['status']) => {
     try {
+      console.log('Updating order status:', orderId, newStatus);
       await updateOrderStatus(orderId, newStatus);
       showSuccess('Order status updated successfully');
-      fetchOrders(); // Refresh orders
+      fetchOrders(); // Refresh the orders list
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
     } catch (error) {
       console.error('Error updating order status:', error);
       showError('Failed to update order status');
@@ -80,14 +136,48 @@ const OrderManagement = () => {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatDate = (date: any) => {
+    if (!date) return 'N/A';
+    
+    try {
+      // Handle different date formats
+      let dateObj: Date;
+      
+      if (typeof date === 'string') {
+        // Handle Firestore timestamp string
+        if (date.includes('T')) {
+          dateObj = new Date(date);
+        } else {
+          // Handle date strings without time
+          dateObj = new Date(date + 'T00:00:00');
+        }
+      } else if (date && typeof date === 'object' && date.toDate) {
+        // Handle Firestore Timestamp object
+        dateObj = date.toDate();
+      } else if (date instanceof Date) {
+        dateObj = date;
+      } else {
+        // Handle timestamp numbers
+        dateObj = new Date(date);
+      }
+      
+      // Check if date is valid
+      if (isNaN(dateObj.getTime())) {
+        console.warn('Invalid date:', date);
+        return 'Invalid Date';
+      }
+      
+      return dateObj.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error, date);
+      return 'Invalid Date';
+    }
   };
 
   if (loading) {
@@ -119,6 +209,15 @@ const OrderManagement = () => {
           <div className="flex items-center space-x-2">
             <Package className="h-6 w-6" />
             <span>{orders.length} Orders</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-pink-400 ml-4"
+              onClick={() => fetchOrders()}
+              disabled={loading}
+            >
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </Button>
           </div>
         </div>
       </header>
@@ -139,28 +238,65 @@ const OrderManagement = () => {
             <p className="text-pink-400">When customers place orders, they will appear here</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Orders List */}
-            <div className="lg:col-span-2">
-              <Card className="border-pink-200">
-                <CardHeader>
-                  <CardTitle className="text-pink-600">Recent Orders</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-pink-200">
-                          <TableHead className="text-pink-600">Order ID</TableHead>
-                          <TableHead className="text-pink-600">Customer</TableHead>
-                          <TableHead className="text-pink-600">Total</TableHead>
-                          <TableHead className="text-pink-600">Status</TableHead>
-                          <TableHead className="text-pink-600">Date</TableHead>
-                          <TableHead className="text-pink-600 text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {orders.map((order) => (
+          <div className="space-y-6">
+            {/* Search and Filter Controls */}
+            <Card className="border-pink-200">
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                      <Input
+                        placeholder="Search by name, email, or order ID..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 border-pink-200"
+                      />
+                    </div>
+                  </div>
+                  <div className="w-full md:w-48">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full px-3 py-2 border border-pink-200 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-2 text-sm text-gray-500">
+                  Showing {filteredOrders.length} of {orders.length} orders
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Orders List */}
+              <div className="lg:col-span-2">
+                <Card className="border-pink-200">
+                  <CardHeader>
+                    <CardTitle className="text-pink-600">Recent Orders</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-pink-200">
+                            <TableHead className="text-pink-600">Order ID</TableHead>
+                            <TableHead className="text-pink-600">Customer</TableHead>
+                            <TableHead className="text-pink-600">Total</TableHead>
+                            <TableHead className="text-pink-600">Status</TableHead>
+                            <TableHead className="text-pink-600">Date</TableHead>
+                            <TableHead className="text-pink-600 text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredOrders.map((order) => (
                           <TableRow key={order.id} className="border-pink-100">
                             <TableCell className="font-medium">
                               #{order.id?.slice(-8)}
@@ -307,6 +443,7 @@ const OrderManagement = () => {
                   </CardContent>
                 </Card>
               )}
+            </div>
             </div>
           </div>
         )}

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, PlusCircle, Edit, Trash2, Upload } from 'lucide-react';
+import { AlertCircle, CheckCircle2, PlusCircle, Edit, Trash2, Upload, ShoppingCart, Star } from 'lucide-react';
 import { MadeWithDyad } from '@/components/made-with-dyad';
 import { getAllProducts, addProduct, updateProduct, deleteProduct } from '@/services/productService';
 import { Product } from '@/services/productService';
@@ -182,6 +182,22 @@ const Admin = () => {
               onClick={() => navigate('/')}
             >
               View Store
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-pink-400"
+              onClick={() => navigate('/admin/orders')}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Order Management
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-pink-400"
+              onClick={() => navigate('/admin/reviews')}
+            >
+              <Star className="h-4 w-4 mr-2" />
+              Review Management
             </Button>
             <Button
               variant="ghost"
