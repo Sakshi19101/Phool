@@ -139,28 +139,29 @@ const CustomerOrders = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-pink-50 to-purple-50">
       {/* Elegant Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-purple-100">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
               <Button
                 variant="ghost"
                 className="text-purple-900 hover:text-purple-700 hover:bg-purple-50 font-medium transition-all duration-300"
                 onClick={() => navigate('/')}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Store
+                <span className="hidden sm:inline">Back to Store</span>
+                <span className="sm:hidden">Back</span>
               </Button>
-              <h1 className="text-3xl font-serif text-purple-900 italic tracking-wide">My Orders</h1>
+              <h1 className="text-xl sm:text-3xl font-serif text-purple-900 italic tracking-wide">My Orders</h1>
             </div>
             <div className="flex items-center space-x-2">
-              <Heart className="h-6 w-6 text-purple-600" />
-              <span className="text-purple-900 font-medium">{orders.length} Orders</span>
+              <Heart className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+              <span className="text-purple-900 font-medium text-sm sm:text-base">{orders.length} Orders</span>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto py-8 px-6">
+      <main className="container mx-auto py-8 px-4 sm:px-6">
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
@@ -189,64 +190,155 @@ const CustomerOrders = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="space-y-6 lg:space-y-8">
             {/* Orders List */}
-            <div className="lg:col-span-2">
-              <Card className="bg-white border-0 shadow-lg rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
-                  <CardTitle className="text-2xl font-serif text-purple-900 flex items-center">
-                    <Heart className="h-6 w-6 mr-3 text-purple-600" />
-                    Your Order History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div
-                        key={order.id}
-                        className="border border-purple-200 rounded-xl p-4 hover:shadow-md transition-all duration-300 cursor-pointer group"
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-semibold text-purple-900 group-hover:text-purple-700 transition-colors">
-                              Order #{order.id?.slice(-8)}
-                            </h4>
-                            <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
-                          </div>
-                          <Badge className={`${getStatusColor(order.status)} border-0`}>
+            <Card className="bg-white border-0 shadow-lg rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
+                <CardTitle className="text-xl sm:text-2xl font-serif text-purple-900 flex items-center">
+                  <Heart className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-purple-600" />
+                  Your Order History
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6">
+                <div className="space-y-3 sm:space-y-4">
+                  {orders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="border border-purple-200 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all duration-300 cursor-pointer group"
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+                        <div>
+                          <h4 className="font-semibold text-purple-900 group-hover:text-purple-700 transition-colors text-sm sm:text-base">
+                            Order #{order.id?.slice(-8)}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-gray-500">{formatDate(order.createdAt)}</p>
+                        </div>
+                        <Badge className={`${getStatusColor(order.status)} border-0 text-xs sm:text-sm`}>
+                          <span className="flex items-center space-x-1">
+                            {getStatusIcon(order.status)}
+                            <span className="font-medium">{order.status}</span>
+                          </span>
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                        <div>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                          </p>
+                          <p className="font-bold text-purple-900 text-base sm:text-lg">₹{order.total.toFixed(2)}</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-purple-300 text-purple-600 hover:bg-purple-50 rounded-full text-xs sm:text-sm"
+                        >
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          <span className="hidden sm:inline">View Details</span>
+                          <span className="sm:hidden">View</span>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Order Details - Mobile Modal / Desktop Sidebar */}
+            {selectedOrder && (
+              <div className="lg:hidden">
+                {/* Mobile Modal */}
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 border-b border-purple-100 sticky top-0">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-serif text-purple-900">Order Details</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedOrder(null)}
+                          className="text-purple-600 hover:text-purple-800"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-sm text-gray-500">#{selectedOrder.id?.slice(-8)}</p>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      {/* Order Status */}
+                      <div>
+                        <h4 className="font-semibold text-purple-900 mb-2 flex items-center text-sm">
+                          <Heart className="h-4 w-4 mr-2 text-purple-600" />
+                          Order Status
+                        </h4>
+                        <div className="space-y-2">
+                          <Badge className={`${getStatusColor(selectedOrder.status)} border-0 text-xs`}>
                             <span className="flex items-center space-x-1">
-                              {getStatusIcon(order.status)}
-                              <span className="font-medium">{order.status}</span>
+                              {getStatusIcon(selectedOrder.status)}
+                              <span className="font-medium">{selectedOrder.status}</span>
                             </span>
                           </Badge>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="text-sm text-gray-600">
-                              {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
-                            </p>
-                            <p className="font-bold text-purple-900 text-lg">₹{order.total.toFixed(2)}</p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-purple-300 text-purple-600 hover:bg-purple-50 rounded-full"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Details
-                          </Button>
+                          <p className="text-xs text-gray-600">{getStatusMessage(selectedOrder.status)}</p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
-            {/* Order Details */}
-            <div className="lg:col-span-1">
+                      {/* Shipping Information */}
+                      <div>
+                        <h4 className="font-semibold text-purple-900 mb-2 flex items-center text-sm">
+                          <MapPin className="h-4 w-4 mr-2 text-purple-600" />
+                          Shipping Information
+                        </h4>
+                        <div className="space-y-1 text-xs">
+                          <p className="font-medium text-purple-900">{selectedOrder.customerDetails.name}</p>
+                          <p className="text-gray-600">{selectedOrder.customerDetails.address}</p>
+                          <p className="text-gray-600">
+                            {selectedOrder.customerDetails.city}, {selectedOrder.customerDetails.state} {selectedOrder.customerDetails.zip}
+                          </p>
+                          <p className="text-gray-600">{selectedOrder.customerDetails.country}</p>
+                          <div className="flex items-center space-x-2 pt-1">
+                            <Phone className="h-3 w-3 text-purple-600" />
+                            <p className="text-gray-600">{selectedOrder.customerDetails.phone}</p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Mail className="h-3 w-3 text-purple-600" />
+                            <p className="text-gray-600">{selectedOrder.customerDetails.email}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Order Items */}
+                      <div>
+                        <h4 className="font-semibold text-purple-900 mb-2 flex items-center text-sm">
+                          <Package className="h-4 w-4 mr-2 text-purple-600" />
+                          Order Items
+                        </h4>
+                        <div className="space-y-2">
+                          {selectedOrder.items.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center text-xs border-b border-purple-100 pb-2">
+                              <div>
+                                <p className="font-medium text-purple-900">{item.productName}</p>
+                                <p className="text-gray-500">Qty: {item.quantity}</p>
+                              </div>
+                              <p className="font-semibold text-purple-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                            </div>
+                          ))}
+                          <div className="pt-2 border-t border-purple-100">
+                            <div className="flex justify-between items-center font-bold">
+                              <span className="text-purple-900 text-sm">Total:</span>
+                              <span className="text-purple-900 text-base">₹{selectedOrder.total.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Desktop Order Details Sidebar */}
+            <div className="hidden lg:block">
               {selectedOrder ? (
                 <Card className="bg-white border-0 shadow-lg rounded-2xl overflow-hidden sticky top-24">
                   <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100">
